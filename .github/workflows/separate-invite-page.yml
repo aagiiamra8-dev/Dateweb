@@ -1,0 +1,39 @@
+name: Separate invitation pages
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  patch:
+    if: ${{ !contains(github.event.head_commit.message, 'Separate invitation pages applied') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Make question and date selection separate pages
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          css='''.step-page{transition:opacity .45s ease,transform .45s ease}.step-page.hidden{display:none!important}.step-page.active{display:block!important}.step-page.leaving{opacity:0;transform:translateX(-18px)}.step-page.entering{opacity:0;transform:translateX(18px)}'''
+          if '.step-page{' not in s:
+              s=s.replace('.card.show{opacity:1;transform:none}', '.card.show{opacity:1;transform:none}'+css, 1)
+          s=s.replace('<div id="questionStep">','<div id="questionStep" class="step-page active">',1)
+          s=s.replace('<div id="inviteStep" style="display:none">','<div id="inviteStep" class="step-page hidden">',1)
+          old="document.getElementById('yes').onclick=()=>{questionStep.style.display='none';inviteStep.style.display='block'};"
+          new="document.getElementById('yes').onclick=()=>{questionStep.classList.add('leaving');setTimeout(()=>{questionStep.classList.remove('active','leaving');questionStep.classList.add('hidden');inviteStep.classList.remove('hidden');inviteStep.classList.add('entering','active');requestAnimationFrame(()=>requestAnimationFrame(()=>inviteStep.classList.remove('entering')))},350)};"
+          if old in s:
+              s=s.replace(old,new,1)
+          else:
+              raise SystemExit('expected yes-button handler not found')
+          p.write_text(s)
+          PY
+      - name: Commit patch and remove workflow
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          rm -f .github/workflows/separate-invite-page.yml
+          git add index.html .github/workflows/separate-invite-page.yml
+          git diff --cached --quiet || git commit -m 'Separate invitation pages applied'
+          git push
