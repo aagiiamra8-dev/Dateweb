@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Болзооны урилга ♡</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Montserrat:wght@400;500;600&display=swap');
+*{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:Montserrat,sans-serif;color:#3d3030;background:linear-gradient(135deg,#f8e9e9,#fff8f4 50%,#f4e3e5);display:flex;justify-content:center;align-items:center;padding:24px}.card{width:min(560px,100%);min-height:720px;position:relative;overflow:hidden;border-radius:30px;background:rgba(255,255,255,.76);backdrop-filter:blur(12px);box-shadow:0 24px 70px rgba(94,53,53,.18);border:1px solid rgba(255,255,255,.9);text-align:center;padding:54px 34px 40px}.petal{position:absolute;font-size:26px;opacity:.35}.p1{top:24px;left:30px}.p2{top:70px;right:30px}.p3{bottom:35px;left:26px}.p4{bottom:80px;right:28px}.eyebrow{letter-spacing:4px;text-transform:uppercase;font-size:11px;color:#a87575;margin-bottom:18px}h1{font-family:'Playfair Display',serif;font-size:clamp(42px,10vw,66px);line-height:1;margin:0;color:#6e4147;font-weight:600}.heart{margin:24px auto 20px;width:62px;height:62px;border-radius:50%;background:#8d5960;color:white;display:grid;place-items:center;font-size:26px;box-shadow:0 12px 30px rgba(141,89,96,.25)}.intro{font-family:'Playfair Display',serif;font-size:20px;line-height:1.6;margin:0 auto 30px;max-width:430px}.details{display:grid;gap:12px;margin:0 auto 30px;max-width:430px}.detail{display:flex;align-items:center;gap:15px;text-align:left;padding:15px 17px;border-radius:17px;background:rgba(255,255,255,.72)}.icon{width:38px;height:38px;flex:0 0 38px;display:grid;place-items:center;border-radius:12px;background:#f3dddd;font-size:17px}.label{font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:#a07c7c;margin-bottom:3px}input,select{width:100%;margin-top:4px;border:0;outline:0;background:transparent;color:#3d3030;font-family:inherit;font-size:14px;font-weight:600}select{cursor:pointer}.message{font-size:13px;line-height:1.7;color:#6d5a5a;max-width:410px;margin:0 auto 26px}button{border:0;cursor:pointer;padding:15px 30px;border-radius:999px;background:#6e4147;color:white;font-family:inherit;font-weight:600;box-shadow:0 12px 28px rgba(110,65,71,.25);transition:.2s ease}button:hover{transform:translateY(-2px)}button:disabled{opacity:.7;cursor:wait}.reply{display:none;margin-top:18px;color:#6e4147;font-family:'Playfair Display',serif;font-size:18px}.footer{margin-top:32px;font-size:10px;letter-spacing:1.5px;color:#b28d8d}
+</style>
+</head>
+<body>
+<main class="card">
+<span class="petal p1">✦</span><span class="petal p2">♡</span><span class="petal p3">✦</span><span class="petal p4">♡</span>
+<div class="eyebrow">A little invitation</div><h1>Болзооны<br>урилга</h1><div class="heart">♡</div>
+<p class="intro">Чамтай хамт сайхан оройг өнгөрөөхийг хүсэж байна. Надтай хамт болзох уу?</p>
+<section class="details">
+<div class="detail"><div class="icon">♡</div><div style="width:100%"><div class="label">Date</div><input id="date" type="date"></div></div>
+<div class="detail"><div class="icon">◷</div><div style="width:100%"><div class="label">Time</div><input id="time" type="time"></div></div>
+<div class="detail"><div class="icon">✦</div><div style="width:100%"><div class="label">Юу хийх вэ?</div><select id="activity"><option>🍷 Dinner date</option><option>🎬 Movie night</option><option>☕ Coffee date</option><option>🌙 Night walk</option><option>🧺 Picnic date</option><option>🎨 Art date</option><option>🎳 Fun activity</option><option>✨ Surprise date</option></select></div></div>
+</section>
+<p class="message" id="dressCode" style="display:none">Dress code: өөртөө хамгийн гоё санагдсан хувцсаа өмсөөрэй. Бусдыг нь би зохицуулна. ✨</p>
+<form id="dateForm" action="https://formsubmit.co/ajax/aagiiamra8@gmail.com" method="POST"><input type="hidden" name="_subject" value="♡ Болзооны урилгын хариу"><input type="hidden" name="_captcha" value="false"><input type="hidden" name="_template" value="table"><input type="hidden" name="Хариу" value="Би зөвшөөрч байна ♡"><button type="submit">Би зөвшөөрч байна ♡</button></form>
+<div class="reply" id="reply"></div><div class="footer">MADE WITH A LITTLE COURAGE & LOTS OF LOVE</div>
+</main>
+<script>
+document.getElementById('dateForm').addEventListener('submit',async function(e){e.preventDefault();const form=this,date=document.getElementById('date').value,time=document.getElementById('time').value,activity=document.getElementById('activity').value,button=form.querySelector('button');if(!date||!time){alert('Огноо болон цагаа сонгоно уу ♡');return}const formatted=new Date(date+'T00:00:00').toLocaleDateString('mn-MN',{year:'numeric',month:'long',day:'numeric',weekday:'long'});const data=new FormData(form);data.append('Сонгосон огноо',formatted);data.append('Сонгосон цаг',time);data.append('Болзооны төрөл',activity);button.disabled=true;button.textContent='Илгээж байна...';try{const r=await fetch(form.action,{method:'POST',body:data,headers:{Accept:'application/json'}});if(!r.ok)throw Error();document.getElementById('reply').innerHTML=`Тэгвэл болзъё. ♡<br><small>${formatted} · ${time} · ${activity}</small>`;document.getElementById('reply').style.display='block';document.getElementById('dressCode').style.display='block';button.style.display='none'}catch(err){button.disabled=false;button.textContent='Би зөвшөөрч байна ♡';alert('Хариу илгээхэд алдаа гарлаа. Дахин оролдоно уу.')}});
+</script>
+</body>
+</html>
