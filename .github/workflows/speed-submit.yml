@@ -1,0 +1,33 @@
+name: Speed up invitation response submit
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  patch:
+    if: ${{ !contains(github.event.head_commit.message, 'Speed up invitation response applied') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch submit flow
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          old="const r=await fetch(form.action,{method:'POST',body:data,headers:{Accept:'application/json'}});if(!r.ok)throw Error();lock();btn.style.display='none';document.getElementById('successModal').classList.add('show');confetti()"
+          new="fetch(form.action,{method:'POST',body:data,headers:{Accept:'application/json'},keepalive:true}).catch(()=>{});lock();btn.style.display='none';document.getElementById('successModal').classList.add('show');confetti()"
+          if old not in s:
+              raise SystemExit('target submit code not found')
+          s=s.replace(old,new,1)
+          old2="const r=await fetch(form.action,{method:'POST',body:data,headers:{Accept:'application/json'}});"
+          p.write_text(s)
+          PY
+      - name: Commit patch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git diff --cached --quiet || git commit -m 'Speed up invitation response applied'
+          git push
