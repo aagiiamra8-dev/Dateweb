@@ -1,0 +1,35 @@
+name: Fix desktop date selection
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  patch:
+    if: ${{ !contains(github.event.head_commit.message, 'Fix desktop date selection applied') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch date input
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          old='.picker{position:absolute;inset:0;width:100%;height:100%;opacity:.01;cursor:pointer;z-index:4;border:0;margin:0;padding:0;background:transparent;color:transparent;font-size:16px;appearance:none;-webkit-appearance:none;touch-action:manipulation}'
+          new='.picker{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:10;border:0;margin:0;padding:0;background:transparent;font-size:16px;appearance:auto;-webkit-appearance:auto;touch-action:manipulation}'
+          if old not in s: raise SystemExit('picker css not found')
+          s=s.replace(old,new,1)
+          oldjs="datetimeBox.addEventListener('click',e=>{if(datePicker.disabled)return;if(e.target!==datePicker){if(typeof datePicker.showPicker==='function'){try{datePicker.showPicker();return}catch(err){}}datePicker.focus()}});"
+          newjs="datetimeBox.addEventListener('click',e=>{if(datePicker.disabled)return;try{if(typeof datePicker.showPicker==='function')datePicker.showPicker();else datePicker.click()}catch(err){datePicker.click()}});"
+          if oldjs not in s: raise SystemExit('date click code not found')
+          s=s.replace(oldjs,newjs,1)
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git diff --cached --quiet || git commit -m 'Fix desktop date selection applied'
+          git push
