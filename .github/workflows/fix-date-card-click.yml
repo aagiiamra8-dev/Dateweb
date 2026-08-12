@@ -1,0 +1,42 @@
+name: Fix date card click
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  patch:
+    if: ${{ !contains(github.event.head_commit.message, 'Date card picker fix applied') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Replace date control with button-triggered picker
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('index.html')
+          s=p.read_text()
+          start=s.find('<div class="detail" id="datetimeBox">')
+          end=s.find('</div><div class="detail" id="timeBox">', start)
+          if start < 0 or end < 0:
+              raise SystemExit('date block not found')
+          block='''<button type="button" class="detail date-button" id="datetimeBox"><div class="icon">♡</div><div style="width:100%;text-align:left"><div class="label">Огноо</div><div class="value" id="dateText">Огноо сонгох</div></div></button><input class="date-native" id="datePicker" type="date" aria-label="Огноо сонгох">'''
+          s=s[:start]+block+s[end:]
+          # Make the date button look exactly like the existing detail cards.
+          s=s.replace('.picker{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:10;border:0;margin:0;padding:0;background:transparent;font-size:16px;appearance:auto;-webkit-appearance:auto;touch-action:manipulation}', '.date-button{font:inherit;color:inherit;width:100%;border:1px solid #75464f1a;outline:0;cursor:pointer}.date-native{position:fixed;left:-10000px;top:0;width:1px;height:1px;opacity:0;pointer-events:none}')
+          # Replace the old date click listener with a direct user-activation handler.
+          old=re.search(r"datetimeBox\.addEventListener\('click'.*?\}\);", s)
+          if not old:
+              raise SystemExit('old date click handler not found')
+          new="""datetimeBox.addEventListener('click',()=>{if(datePicker.disabled)return;try{if(typeof datePicker.showPicker==='function')datePicker.showPicker();else datePicker.click()}catch(err){try{datePicker.click()}catch(e){}}});"""
+          s=s[:old.start()]+new+s[old.end():]
+          p.write_text(s)
+          PY
+      - name: Commit patch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git diff --cached --quiet || git commit -m 'Date card picker fix applied'
+          git push
