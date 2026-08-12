@@ -6,23 +6,29 @@ permissions:
   contents: write
 jobs:
   fix:
-    if: ${{ !contains(github.event.head_commit.message, 'Fix date picker click target applied') }}
+    if: ${{ !contains(github.event.head_commit.message, 'Use 30-day date options applied') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Patch date picker
+      - name: Replace date picker with 30-day options
         run: |
           python3 - <<'PY'
           from pathlib import Path
           p=Path('index.html')
           s=p.read_text()
-          start=s.find('.picker{')
-          if start >= 0:
-              end=s.find('}', start)
-              css=s[start:end+1]
-              css=css.replace('pointer-events:none;','pointer-events:auto;')
-              css=css.replace('appearance:none;','').replace('-webkit-appearance:none;','')
-              s=s[:start]+css+s[end+1:]
+          old_start=s.find('<div class="detail" id="datetimeBox">')
+          old_end=s.find('</div><div class="detail" id="timeBox">', old_start)
+          if old_start < 0 or old_end < 0:
+              raise SystemExit('datetime block not found')
+          new='''<div class="detail" id="datetimeBox"><div class="icon">📅</div><div style="width:100%"><div class="label">Огноо</div><select class="picker date-options" id="datePicker" aria-label="Огноо сонгох"><option value="">Огноо сонгох</option></select></div></div>'''
+          s=s[:old_start]+new+s[old_end:]
+          old_css='.picker{position:absolute;inset:0;width:100%;height:100%;opacity:.01;cursor:pointer;z-index:4;pointer-events:auto;border:0;margin:0;padding:0;background:transparent;color:transparent;font-size:16px;touch-action:manipulation;}'
+          new_css='.picker{width:100%;height:40px;border:0;outline:0;background:transparent;color:#4b3b3d;font:600 14px "DM Sans",sans-serif;cursor:pointer;padding:0;margin:0;}'
+          s=s.replace(old_css,new_css)
+          marker='const now=new Date();'
+          inject='''const now=new Date();\nconst datePicker=document.getElementById('datePicker');\nconst dateText=document.getElementById('dateText');\nconst days=['Ням','Даваа','Мягмар','Лхагва','Пүрэв','Баасан','Бямба'],months=['1-р сар','2-р сар','3-р сар','4-р сар','5-р сар','6-р сар','7-р сар','8-р сар','9-р сар','10-р сар','11-р сар','12-р сар'],pad=n=>String(n).padStart(2,'0');\nfor(let i=0;i<30;i++){const d=new Date(now);d.setDate(now.getDate()+i);const value=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;const label=`${d.getFullYear()} оны ${months[d.getMonth()]} ${d.getDate()} · ${days[d.getDay()]}`;const o=document.createElement('option');o.value=value;o.textContent=label;datePicker.appendChild(o)}\n'''
+          import re
+          s=re.sub(r"const now=new Date\(\);.*?function showDatePicker\(\)\{.*?\}",inject+'function showDatePicker(){}',s,count=1,flags=re.S)
           p.write_text(s)
           PY
       - name: Commit patch
@@ -30,5 +36,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html
-          git diff --cached --quiet || git commit -m 'Fix date picker click target applied'
+          git diff --cached --quiet || git commit -m 'Use 30-day date options applied'
           git push
